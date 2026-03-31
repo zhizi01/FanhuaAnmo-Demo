@@ -42,6 +42,12 @@ const routes = [
     meta: { tab: 2, title: '个人中心' },
   },
   {
+    path: '/me/login',
+    name: 'Login',
+    component: () => import('@/views/me/Login.vue'),
+    meta: { hideTabBar: true, title: '登录' },
+  },
+  {
     path: '/me/orders',
     name: 'Orders',
     component: () => import('@/views/me/Orders.vue'),
@@ -97,12 +103,6 @@ const router = createRouter({
   scrollBehavior() {
     return { top: 0 }
   },
-})
-
-router.afterEach((to) => {
-  if (to.meta?.title) {
-    document.title = `${to.meta.title} · 芷子按摩`
-  }
 })
 
 export default router

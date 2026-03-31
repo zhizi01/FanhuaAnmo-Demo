@@ -36,6 +36,7 @@ function customerService() {
 
 <template>
   <div class="page">
+    <h1 class="page-title">个人中心</h1>
     <div class="header">
       <div class="avatar-wrap" @click="loginDemo">
         <img :src="avatar" alt="" class="avatar" />
@@ -68,6 +69,15 @@ function customerService() {
 <style scoped>
 .page {
   padding: 12px 0 24px;
+}
+
+.page-title {
+  margin: 0;
+  padding: 2px 16px 12px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #323233;
+  letter-spacing: 0.02em;
 }
 
 .header {

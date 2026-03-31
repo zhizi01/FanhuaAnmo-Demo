@@ -9,7 +9,15 @@ const router = useRouter()
 
 const gender = ref(route.query.gender === 'female' ? 'female' : 'male')
 const massageType = ref('全部')
-const distanceMax = ref(10)
+/** @type {import('vue').Ref<'lt5' | '5to20' | '20to100' | 'gt100'>} */
+const distanceRange = ref('lt5')
+
+const DISTANCE_OPTIONS = [
+  { text: '<5KM', value: 'lt5' },
+  { text: '5~20KM', value: '5to20' },
+  { text: '20~100KM', value: '20to100' },
+  { text: '>100KM', value: 'gt100' },
+]
 
 watch(
   () => route.query.gender,
@@ -18,16 +26,39 @@ watch(
   },
 )
 
-const typeOptions = computed(() => ['全部', ...MASSAGE_TYPES])
+/** 固定引用，避免模板内每次 map 出新数组触发 van-dropdown 递归更新 */
+const massageTypeOptions = [
+  { text: '全部', value: '全部' },
+  ...MASSAGE_TYPES.map((t) => ({ text: t, value: t })),
+]
+
+function inDistanceBucket(d, range) {
+  switch (range) {
+    case 'lt5':
+      return d < 5
+    case '5to20':
+      return d >= 5 && d <= 20
+    case '20to100':
+      return d > 20 && d <= 100
+    case 'gt100':
+      return d > 100
+    default:
+      return true
+  }
+}
 
 const filtered = computed(() => {
   let list = therapists.filter((t) => t.gender === gender.value)
-  list = list.filter((t) => t.distanceKm <= distanceMax.value)
+  list = list.filter((t) => inDistanceBucket(t.distanceKm, distanceRange.value))
   if (massageType.value !== '全部') {
     list = list.filter((t) => t.tags.includes(massageType.value))
   }
   return [...list].sort((a, b) => a.distanceKm - b.distanceKm)
 })
+
+const distanceHint = computed(
+  () => DISTANCE_OPTIONS.find((o) => o.value === distanceRange.value)?.text ?? '',
+)
 
 function openTherapist(t) {
   router.push(`/door/therapist/${t.id}`)
@@ -44,16 +75,13 @@ function onBack() {
 
     <div class="filters">
       <van-dropdown-menu>
-        <van-dropdown-item v-model="massageType" :options="typeOptions.map((t) => ({ text: t, value: t }))" />
+        <van-dropdown-item v-model="massageType" :options="massageTypeOptions" />
+        <van-dropdown-item v-model="distanceRange" :options="DISTANCE_OPTIONS" />
       </van-dropdown-menu>
-      <div class="dist-field">
-        <span class="dist-label">最远距离 {{ distanceMax }} km</span>
-        <van-slider v-model="distanceMax" :min="1" :max="20" bar-height="4px" active-color="#0f766e" />
-      </div>
     </div>
 
     <div class="hint">
-      已选：{{ gender === 'male' ? '男' : '女' }}技师 · 按距离由近到远
+      已选：{{ gender === 'male' ? '男' : '女' }}技师 · 距离 {{ distanceHint }} · 按距离由近到远
     </div>
 
     <TherapistCard
@@ -74,18 +102,6 @@ function onBack() {
 
 .filters {
   margin-top: 8px;
-}
-
-.dist-field {
-  padding: 12px 16px 8px;
-  background: #fff;
-}
-
-.dist-label {
-  display: block;
-  font-size: 13px;
-  color: #646566;
-  margin-bottom: 8px;
 }
 
 .hint {

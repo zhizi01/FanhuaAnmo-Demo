@@ -2,15 +2,11 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import TherapistCard from '@/components/TherapistCard.vue'
+import { PROFILE_COVER_GG } from '@/constants/assets'
 import { therapists } from '@/mock/therapists'
 
 const router = useRouter()
-
-const banners = [
-  { color: 'linear-gradient(135deg,#0d9488,#134e4a)', text: '正规按摩 · 上门到家' },
-  { color: 'linear-gradient(135deg,#0369a1,#0c4a6e)', text: '专业技师 · 安心预约' },
-  { color: 'linear-gradient(135deg,#7c3aed,#4c1d95)', text: '到店体验 · 环境舒适' },
-]
+const bannerSrc = PROFILE_COVER_GG
 
 const recommended = computed(() =>
   [...therapists].sort((a, b) => a.distanceKm - b.distanceKm).slice(0, 4),
@@ -27,22 +23,19 @@ function openTherapist(t) {
 
 <template>
   <div class="door-home">
-    <van-swipe class="banner" :autoplay="4000" indicator-color="#0f766e">
-      <van-swipe-item v-for="(b, i) in banners" :key="i">
-        <div class="banner__slide" :style="{ background: b.color }">
-          {{ b.text }}
-        </div>
-      </van-swipe-item>
-    </van-swipe>
+    <h1 class="page-title">上门按摩</h1>
+    <div class="banner">
+      <img class="banner__img" :src="bannerSrc" alt="" />
+    </div>
 
     <div class="pick-row">
       <div class="pick-card pick-card--male" @click="goTherapists('male')">
         <div class="pick-card__title">预约男技师</div>
-        <div class="pick-card__sub">按距离排序 · 可筛选类型</div>
+        <div class="pick-card__sub">正骨推荐</div>
       </div>
       <div class="pick-card pick-card--female" @click="goTherapists('female')">
         <div class="pick-card__title">预约女技师</div>
-        <div class="pick-card__sub">按距离排序 · 可筛选类型</div>
+        <div class="pick-card__sub">保养推荐</div>
       </div>
     </div>
 
@@ -65,22 +58,29 @@ function openTherapist(t) {
   padding-bottom: 8px;
 }
 
-.banner {
-  height: 140px;
+.page-title {
+  margin: 0;
+  padding: 14px 16px 10px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #323233;
+  letter-spacing: 0.02em;
 }
 
-.banner__slide {
-  height: 140px;
+.banner {
   margin: 0 12px;
   border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-weight: 600;
-  font-size: 16px;
-  padding: 16px;
-  text-align: center;
+  overflow: hidden;
+  background: #f2f3f5;
+  aspect-ratio: 750 / 360;
+}
+
+.banner__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  vertical-align: top;
 }
 
 .pick-row {

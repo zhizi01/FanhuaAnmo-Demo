@@ -1,13 +1,25 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { showToast } from 'vant'
+import {
+  showToast,
+  showConfirmDialog,
+  showLoadingToast,
+  closeToast,
+  showDialog,
+} from 'vant'
 import ProfileHero from '@/components/ProfileHero.vue'
-import { resolveTherapistAvatar, USER_DEFAULT_AVATAR } from '@/constants/assets'
+import {
+  resolveTherapistAvatar,
+  USER_DEFAULT_AVATAR,
+  LICENSE_BG,
+} from '@/constants/assets'
 import { getTherapistById } from '@/mock/therapists'
+import { useAuth } from '@/composables/useAuth'
 
 const route = useRoute()
 const router = useRouter()
+const { loggedIn, phone: userPhone } = useAuth()
 
 const therapist = computed(() => getTherapistById(route.params.id))
 
@@ -32,8 +44,69 @@ function onBack() {
   router.back()
 }
 
-function bookPackage() {
-  showToast('演示环境：请后续接入下单流程')
+const showBook = ref(false)
+const selectedPackageId = ref('')
+const formPhone = ref('')
+const formAddress = ref('')
+const formContact = ref('')
+
+watch(showBook, (open) => {
+  if (!open || !therapist.value) return
+  const pkgs = therapist.value.packages ?? []
+  if (pkgs.length && !selectedPackageId.value) {
+    selectedPackageId.value = pkgs[0].id
+  }
+})
+
+function openBookPopup() {
+  const pkgs = therapist.value?.packages ?? []
+  selectedPackageId.value = pkgs[0]?.id ?? ''
+  formPhone.value = ''
+  formAddress.value = ''
+  formContact.value = ''
+  if (loggedIn.value && userPhone.value && !userPhone.value.includes('*')) {
+    formPhone.value = userPhone.value
+  }
+  showBook.value = true
+}
+
+async function submitOrder() {
+  const pkgs = therapist.value?.packages ?? []
+  if (pkgs.length && !selectedPackageId.value) {
+    showToast('请选择套餐')
+    return
+  }
+
+  if (!loggedIn.value) {
+    try {
+      await showConfirmDialog({
+        title: '提示',
+        message: '需要先登录，才能为您提供服务！',
+        confirmButtonText: '登录',
+        cancelButtonText: '取消',
+      })
+      showBook.value = false
+      router.push('/me/login')
+    } catch {
+      /* 取消 */
+    }
+    return
+  }
+
+  showLoadingToast({
+    message: '加载中...',
+    forbidClick: true,
+    duration: 0,
+  })
+  await new Promise((r) => setTimeout(r, 5000))
+  closeToast()
+  await showDialog({
+    title: '提示',
+    message:
+      '调动微信支付异常，检测到当前是演示模式，演示模式不允许下单，谢谢。',
+    confirmButtonText: '知道了',
+  })
+  showBook.value = false
 }
 </script>
 
@@ -62,37 +135,89 @@ function bookPackage() {
       <div class="meta">{{ orgLine }}</div>
       <p class="intro">{{ therapist.intro }}</p>
 
-      <div class="block-title">按摩套餐</div>
+      <div class="block-title">价格展示目录</div>
       <van-cell-group inset>
         <van-cell
           v-for="pkg in therapist.packages"
           :key="pkg.id"
           :title="pkg.name"
           :value="`¥${pkg.price}`"
-          is-link
-          @click="bookPackage"
         />
       </van-cell-group>
 
       <div class="block-title">个人执照</div>
       <div class="license">
-        <div class="license__placeholder">
-          <van-image
-            v-if="therapist.licenseImage"
-            width="100%"
-            height="120"
-            fit="cover"
-            :src="therapist.licenseImage"
-          />
-          <div v-else class="license__empty">执照公示（示意图）</div>
+        <div class="license__img-wrap">
+          <img class="license__img" :src="LICENSE_BG" alt="执照公示" />
         </div>
         <p class="license__note">{{ therapist.licenseNote }}</p>
       </div>
 
-      <van-button block round type="primary" class="cta" color="#0f766e" @click="bookPackage">
+      <van-button
+        block
+        round
+        type="primary"
+        class="cta"
+        color="#0f766e"
+        @click="openBookPopup"
+      >
         预约技师
       </van-button>
     </div>
+
+    <van-popup
+      v-model:show="showBook"
+      position="bottom"
+      round
+      class="book-popup"
+      :style="{ maxHeight: '85vh' }"
+    >
+      <div class="popup-inner">
+        <div class="popup-head">预约 {{ therapist.name }}</div>
+
+        <div class="popup-sub">选择套餐</div>
+        <van-radio-group v-model="selectedPackageId">
+          <van-cell-group inset>
+            <van-cell
+              v-for="pkg in therapist.packages"
+              :key="pkg.id"
+              :title="pkg.name"
+              clickable
+              @click="selectedPackageId = pkg.id"
+            >
+              <template #value>
+                <span class="pkg-price">¥{{ pkg.price }}</span>
+              </template>
+              <template #right-icon>
+                <van-radio :name="pkg.id" />
+              </template>
+            </van-cell>
+          </van-cell-group>
+        </van-radio-group>
+
+        <van-field
+          v-model="formPhone"
+          label="手机号"
+          placeholder="请输入手机号"
+          type="tel"
+          maxlength="11"
+        />
+        <van-field
+          v-model="formAddress"
+          label="地址"
+          placeholder="上门服务地址"
+        />
+        <van-field
+          v-model="formContact"
+          label="联系方式"
+          placeholder="微信号 / 备用电话等"
+        />
+
+        <van-button block round type="primary" color="#0f766e" @click="submitOrder">
+          下单
+        </van-button>
+      </div>
+    </van-popup>
   </div>
   <van-empty v-else description="技师不存在" />
 </template>
@@ -166,19 +291,16 @@ function bookPackage() {
   overflow: hidden;
 }
 
-.license__placeholder {
+.license__img-wrap {
   border-radius: 8px;
   overflow: hidden;
   background: #f2f3f5;
 }
 
-.license__empty {
-  height: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #969799;
-  font-size: 13px;
+.license__img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .license__note {
@@ -189,5 +311,30 @@ function bookPackage() {
 
 .cta {
   margin-top: 24px;
+}
+
+.popup-inner {
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+}
+
+.popup-head {
+  font-size: 17px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 12px;
+  color: #323233;
+}
+
+.popup-sub {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 4px 10px;
+  color: #646566;
+}
+
+.pkg-price {
+  color: #ee0a24;
+  font-weight: 600;
+  margin-right: 8px;
 }
 </style>
