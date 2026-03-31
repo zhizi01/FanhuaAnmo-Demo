@@ -1,29 +1,22 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import TherapistCard from '@/components/TherapistCard.vue'
 import StoreCard from '@/components/StoreCard.vue'
 import { getTherapistById } from '@/mock/therapists'
 import { getStoreById } from '@/mock/stores'
-import { loadFavoriteIds } from '@/mock/favorites'
+import { useFavorites } from '@/composables/useFavorites'
 
 const router = useRouter()
+const { technicianIds, storeIds } = useFavorites()
+
 const activeTab = ref(0)
 
-const favTechIds = ref([])
-const favStoreIds = ref([])
-
-onMounted(() => {
-  const f = loadFavoriteIds()
-  favTechIds.value = f.technicianIds
-  favStoreIds.value = f.storeIds
-})
-
 const favTherapists = computed(() =>
-  favTechIds.value.map(getTherapistById).filter(Boolean),
+  technicianIds.value.map(getTherapistById).filter(Boolean),
 )
 
-const favStores = computed(() => favStoreIds.value.map(getStoreById).filter(Boolean))
+const favStores = computed(() => storeIds.value.map(getStoreById).filter(Boolean))
 
 function onBack() {
   router.back()
@@ -44,17 +37,34 @@ function openStore(s) {
 
     <van-tabs v-model:active="activeTab" color="#0f766e" title-active-color="#0f766e">
       <van-tab title="技师">
-        <TherapistCard
-          v-for="t in favTherapists"
-          :key="t.id"
-          :therapist="t"
-          @click="openTherapist"
-        />
-        <van-empty v-if="favTherapists.length === 0" description="暂无收藏的技师" />
+        <div class="tab-body">
+          <TherapistCard
+            v-for="t in favTherapists"
+            :key="t.id"
+            :therapist="t"
+            @click="openTherapist"
+          />
+          <van-empty
+            v-if="favTherapists.length === 0"
+            image="search"
+            description="暂无收藏的技师"
+          />
+        </div>
       </van-tab>
       <van-tab title="商家">
-        <StoreCard v-for="s in favStores" :key="s.id" :store="s" @click="openStore" />
-        <van-empty v-if="favStores.length === 0" description="暂无收藏的商家" />
+        <div class="tab-body">
+          <StoreCard
+            v-for="s in favStores"
+            :key="s.id"
+            :store="s"
+            @click="openStore"
+          />
+          <van-empty
+            v-if="favStores.length === 0"
+            image="search"
+            description="暂无收藏的商家"
+          />
+        </div>
       </van-tab>
     </van-tabs>
   </div>
@@ -63,5 +73,10 @@ function openStore(s) {
 <style scoped>
 .page {
   padding-bottom: 24px;
+}
+
+.tab-body {
+  min-height: 220px;
+  padding-bottom: 16px;
 }
 </style>

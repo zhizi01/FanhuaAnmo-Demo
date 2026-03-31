@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+
 import {
   showToast,
   showConfirmDialog,
@@ -8,6 +9,11 @@ import {
   closeToast,
   showDialog,
 } from 'vant'
+
+import 'vant/es/toast/style';
+import 'vant/es/dialog/style';
+
+
 import ProfileHero from '@/components/ProfileHero.vue'
 import {
   resolveTherapistAvatar,
@@ -16,12 +22,22 @@ import {
 } from '@/constants/assets'
 import { getTherapistById } from '@/mock/therapists'
 import { useAuth } from '@/composables/useAuth'
+import { useFavorites } from '@/composables/useFavorites'
 
 const route = useRoute()
 const router = useRouter()
 const { loggedIn, phone: userPhone } = useAuth()
+const { technicianIds, toggleTechnician } = useFavorites()
 
 const therapist = computed(() => getTherapistById(route.params.id))
+
+const isFavorite = computed(
+  () => !!therapist.value?.id && technicianIds.value.includes(therapist.value.id),
+)
+
+function onToggleFavorite() {
+  if (therapist.value) toggleTechnician(therapist.value.id)
+}
 
 const avatarSrc = computed(() =>
   therapist.value ? resolveTherapistAvatar(therapist.value) : USER_DEFAULT_AVATAR,
@@ -47,8 +63,8 @@ function onBack() {
 const showBook = ref(false)
 const selectedPackageId = ref('')
 const formPhone = ref('')
+const formContactName = ref('')
 const formAddress = ref('')
-const formContact = ref('')
 
 watch(showBook, (open) => {
   if (!open || !therapist.value) return
@@ -62,18 +78,47 @@ function openBookPopup() {
   const pkgs = therapist.value?.packages ?? []
   selectedPackageId.value = pkgs[0]?.id ?? ''
   formPhone.value = ''
+  formContactName.value = ''
   formAddress.value = ''
-  formContact.value = ''
   if (loggedIn.value && userPhone.value && !userPhone.value.includes('*')) {
     formPhone.value = userPhone.value
   }
   showBook.value = true
 }
 
+const PHONE_RE = /^1[3-9]\d{9}$/
+
+function validateBookForm() {
+  const phone = formPhone.value.trim()
+  if (!phone) {
+    showToast('请填写手机号')
+    return false
+  }
+  if (!PHONE_RE.test(phone)) {
+    showToast('请输入正确的 11 位手机号')
+    return false
+  }
+  const contact = formContactName.value.trim()
+  if (!contact || contact.length < 2) {
+    showToast('请填写联系人（至少 2 个字）')
+    return false
+  }
+  const addr = formAddress.value.trim()
+  if (!addr || addr.length < 2) {
+    showToast('请填写地址')
+    return false
+  }
+  return true
+}
+
 async function submitOrder() {
   const pkgs = therapist.value?.packages ?? []
   if (pkgs.length && !selectedPackageId.value) {
     showToast('请选择套餐')
+    return
+  }
+
+  if (!validateBookForm()) {
     return
   }
 
@@ -112,7 +157,17 @@ async function submitOrder() {
 
 <template>
   <div v-if="therapist" class="page">
-    <van-nav-bar title="技师主页" left-arrow fixed placeholder @click-left="onBack" />
+    <van-nav-bar title="技师主页" left-arrow fixed placeholder @click-left="onBack">
+      <template #right>
+        <van-icon
+          :name="isFavorite ? 'star' : 'star-o'"
+          class="nav-fav"
+          :class="{ 'nav-fav--on': isFavorite }"
+          size="22"
+          @click="onToggleFavorite"
+        />
+      </template>
+    </van-nav-bar>
 
     <ProfileHero :avatar-src="avatarSrc" />
 
@@ -203,14 +258,14 @@ async function submitOrder() {
           maxlength="11"
         />
         <van-field
-          v-model="formAddress"
-          label="地址"
-          placeholder="上门服务地址"
+          v-model="formContactName"
+          label="联系人"
+          placeholder="请输入联系人姓名"
         />
         <van-field
-          v-model="formContact"
-          label="联系方式"
-          placeholder="微信号 / 备用电话等"
+          v-model="formAddress"
+          label="地址"
+          placeholder="上门服务详细地址"
         />
 
         <van-button block round type="primary" color="#0f766e" @click="submitOrder">
@@ -336,5 +391,15 @@ async function submitOrder() {
   color: #ee0a24;
   font-weight: 600;
   margin-right: 8px;
+}
+
+.nav-fav {
+  padding: 8px;
+  margin-right: 4px;
+  color: #646566;
+}
+
+.nav-fav--on {
+  color: #ffb800;
 }
 </style>
