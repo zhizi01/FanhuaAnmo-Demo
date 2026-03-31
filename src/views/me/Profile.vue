@@ -5,6 +5,9 @@ import { showConfirmDialog, showLoadingToast, closeToast, showToast } from 'vant
 import { useAuth } from '@/composables/useAuth'
 import { resolveUserAvatar } from '@/constants/assets'
 
+import 'vant/es/toast/style';
+import 'vant/es/dialog/style';
+
 const router = useRouter()
 const { user, logout } = useAuth()
 
@@ -35,6 +38,12 @@ function onAvatarClick() {
   }
 }
 
+function onInfoClick() {
+  if (!user.value.loggedIn) {
+    router.push('/me/login')
+  }
+}
+
 async function customerService() {
   showLoadingToast({
     message: '正在连接客服…',
@@ -54,13 +63,18 @@ async function customerService() {
       <div class="avatar-wrap" role="button" @click="onAvatarClick">
         <img :src="avatar" alt="" class="avatar" />
       </div>
-      <div class="info">
-        <div class="row">
-          <span class="nick">{{ user.nickname }}</span>
-          <van-tag type="warning" plain class="level">{{ user.memberLevel }}</van-tag>
-        </div>
-        <div class="phone">{{ maskPhone(user.phone) }}</div>
-        <div v-if="!user.loggedIn" class="tip">点击头像前往登录</div>
+      <div class="info" :class="{ 'info--guest': !user.loggedIn }" @click="onInfoClick">
+        <template v-if="user.loggedIn">
+          <div class="row">
+            <span class="nick">{{ user.nickname }}</span>
+            <van-tag type="warning" plain class="level">{{ user.memberLevel }}</van-tag>
+          </div>
+          <div class="phone">{{ maskPhone(user.phone) }}</div>
+        </template>
+        <template v-else>
+          <div class="nick">未登录</div>
+          <div class="login-sub">点击此处登录账户</div>
+        </template>
       </div>
     </div>
 
@@ -133,6 +147,18 @@ async function customerService() {
   min-width: 0;
 }
 
+.info--guest {
+  cursor: pointer;
+}
+
+.login-sub {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 400;
+  opacity: 0.92;
+  line-height: 1.4;
+}
+
 .row {
   display: flex;
   align-items: center;
@@ -153,12 +179,6 @@ async function customerService() {
   margin-top: 6px;
   font-size: 13px;
   opacity: 0.95;
-}
-
-.tip {
-  margin-top: 6px;
-  font-size: 11px;
-  opacity: 0.85;
 }
 
 .quick-wrap {

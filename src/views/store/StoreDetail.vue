@@ -8,6 +8,10 @@ import {
   closeToast,
   showDialog,
 } from 'vant'
+
+import 'vant/es/toast/style';
+import 'vant/es/dialog/style';
+
 import ProfileHero from '@/components/ProfileHero.vue'
 import {
   resolveStoreImage,

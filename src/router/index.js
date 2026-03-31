@@ -95,6 +95,10 @@ const routes = [
     component: () => import('@/views/me/PlaceholderPage.vue'),
     meta: { hideTabBar: true, title: '技师入驻' },
   },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/door',
+  },
 ]
 
 const router = createRouter({

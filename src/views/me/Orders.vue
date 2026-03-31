@@ -1,20 +1,17 @@
 <script setup>
-import { computed } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { orders, ORDER_STATUS_LABEL } from '@/mock/orders'
 
 const router = useRouter()
 
-const list = computed(() => [...orders].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)))
+const typeTab = ref(0)
+const doorStatusTab = ref(0)
+const storeStatusTab = ref(0)
+
+const STATUS_TITLES = ['已预约', '进行中', '已完成', '已取消', '违规订单']
 
 function onBack() {
   router.back()
-}
-
-function statusType(s) {
-  if (s === 'completed') return 'success'
-  if (s === 'pending') return 'warning'
-  return 'default'
 }
 </script>
 
@@ -22,37 +19,53 @@ function statusType(s) {
   <div class="page">
     <van-nav-bar title="订单历史" left-arrow fixed placeholder @click-left="onBack" />
 
-    <van-cell-group v-for="o in list" :key="o.id" inset class="card">
-      <van-cell :title="o.title" :label="o.createdAt">
-        <template #value>
-          <div class="cell-right">
-            <div class="amount">¥{{ o.amount }}</div>
-            <van-tag :type="statusType(o.status)" plain>{{ ORDER_STATUS_LABEL[o.status] ?? o.status }}</van-tag>
-          </div>
-        </template>
-      </van-cell>
-    </van-cell-group>
+    <van-tabs v-model:active="typeTab" color="#0f766e" title-active-color="#0f766e">
+      <van-tab title="上门订单">
+        <van-tabs
+          v-model:active="doorStatusTab"
+          scrollable
+          color="#0f766e"
+          title-active-color="#0f766e"
+          class="sub-tabs"
+        >
+          <van-tab v-for="t in STATUS_TITLES" :key="'door-' + t" :title="t">
+            <div class="tab-pane">
+              <van-empty description="暂无订单" />
+            </div>
+          </van-tab>
+        </van-tabs>
+      </van-tab>
 
-    <van-empty v-if="list.length === 0" description="暂无订单" />
+      <van-tab title="到店订单">
+        <van-tabs
+          v-model:active="storeStatusTab"
+          scrollable
+          color="#0f766e"
+          title-active-color="#0f766e"
+          class="sub-tabs"
+        >
+          <van-tab v-for="t in STATUS_TITLES" :key="'store-' + t" :title="t">
+            <div class="tab-pane">
+              <van-empty description="暂无订单" />
+            </div>
+          </van-tab>
+        </van-tabs>
+      </van-tab>
+    </van-tabs>
   </div>
 </template>
 
 <style scoped>
 .page {
-  padding: 8px 0 24px;
+  padding-bottom: 24px;
 }
 
-.card {
-  margin-top: 10px;
+.sub-tabs {
+  margin-top: 0;
 }
 
-.cell-right {
-  text-align: right;
-}
-
-.amount {
-  font-weight: 600;
-  color: #323233;
-  margin-bottom: 6px;
+.tab-pane {
+  min-height: 280px;
+  padding: 24px 16px;
 }
 </style>

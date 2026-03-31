@@ -11,25 +11,18 @@ const paragraphs = computed(() => {
   switch (route.name) {
     case 'Privacy':
       return [
-        '本页为《隐私协议》占位内容。',
-        '正式上线前请替换为完整法律文本，并确保与后端政策一致。',
+        '《隐私协议》',
+        '',
       ]
     case 'ServiceAgreement':
       return [
-        '本页为《服务协议》占位内容。',
-        '可描述服务范围、预约规则、退款与争议处理等条款骨架。',
+        '《服务协议》',
+        '',
       ]
-    case 'Complaint':
-      return [
-        '违规投诉入口（演示）。',
-        '可在此接入表单或客服工单系统。',
-      ]
-    case 'About':
-      return ['芷子按摩 · 演示版', '正规按摩服务预约平台（前端 mock 数据）。']
     case 'MerchantJoin':
-      return ['商户入驻申请（演示）。', '后续可对接资质审核与合同签署流程。']
+      return ['商户入驻申请', '']
     case 'TherapistJoin':
-      return ['技师入驻申请（演示）。', '后续可对接认证与排班管理。']
+      return ['技师入驻申请', '']
     default:
       return ['内容建设中。']
   }
