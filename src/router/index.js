@@ -74,7 +74,7 @@ const routes = [
   {
     path: '/me/complaint',
     name: 'Complaint',
-    component: () => import('@/views/me/PlaceholderPage.vue'),
+    component: () => import('@/views/me/Complaint.vue'),
     meta: { hideTabBar: true, title: '投诉违规' },
   },
   {
