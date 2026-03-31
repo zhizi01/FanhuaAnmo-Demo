@@ -1,0 +1,87 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+  color: #323233;
+  background: #f7f8fa;
+}
+
+#app {
+  max-width: 100%;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  text-align: left;
+  border: none;
+}
+
+.app-page {
+  padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.app-page--no-tab {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.warning-strip {
+  margin: 12px 12px 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fff7e6;
+  color: #d46b08;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.profile-cover-wrap {
+  position: relative;
+  height: 160px;
+  overflow: hidden;
+}
+
+.profile-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-avatar-overlap {
+  position: relative;
+  margin-top: -36px;
+  margin-left: 16px;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.profile-avatar-overlap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
